@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fajinas Siciliano</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle, #fff8e1, #ffe0b2);
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      margin-top: 20px;
+      color: #bf360c;
+      font-size: 2.2em;
+    }
+
+    #add-player {
+      margin: 20px;
+      padding: 10px 15px;
+      background-color: #ff7043;
+      border: none;
+      color: white;
+      font-size: 1em;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #add-player:hover {
+      background-color: #e64a19;
+    }
+
+    #player-list {
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .player {
+      background: #fff3e0;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .player-name {
+      font-weight: bold;
+      flex: 1;
+    }
+
+    .score {
+      font-size: 1.2em;
+      margin: 0 15px;
+      width: 30px;
+      text-align: center;
+    }
+
+    button.score-btn {
+      background-color: #ff7043;
+      border: none;
+      color: white;
+      font-size: 1em;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button.score-btn:hover {
+      transform: scale(1.1);
+    }
+
+  </style>
+</head>
+<body>
+  <h1>🃏 Fajinas Siciliano</h1>
+  <button id="add-player">➕ Aggiungi Giocatore</button>
+
+  <div id="player-list"></div>
+
+  <script>
+    const playerList = document.getElementById('player-list');
+    const addPlayerBtn = document.getElementById('add-player');
+
+    addPlayerBtn.addEventListener('click', () => {
+      const name = prompt("Nome del giocatore:");
+      if (name && name.trim() !== "") {
+        createPlayer(name.trim());
+      }
+    });
+
+    function createPlayer(name) {
+      const playerDiv = document.createElement('div');
+      playerDiv.className = 'player';
+
+      const playerName = document.createElement('span');
+      playerName.className = 'player-name';
+      playerName.textContent = name;
+
+      const minusBtn = document.createElement('button');
+      minusBtn.textContent = '−';
+      minusBtn.className = 'score-btn';
+
+      const score = document.createElement('span');
+      score.className = 'score';
+      score.textContent = '0';
+
+      const plusBtn = document.createElement('button');
+      plusBtn.textContent = '+';
+      plusBtn.className = 'score-btn';
+
+      plusBtn.addEventListener('click', () => {
+        score.textContent = parseInt(score.textContent) + 1;
+      });
+
+      minusBtn.addEventListener('click', () => {
+        score.textContent = parseInt(score.textContent) - 1;
+      });
+
+      playerDiv.appendChild(playerName);
+      playerDiv.appendChild(minusBtn);
+      playerDiv.appendChild(score);
+      playerDiv.appendChild(plusBtn);
+
+      playerList.appendChild(playerDiv);
+    }
+  </script>
+</body>
+</html>
