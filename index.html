@@ -109,7 +109,7 @@
       font-size: 1.3em;
       min-width: 80px;
     }
-      .score-section {
+    .score-section {
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -229,7 +229,7 @@
         renderPlayers();
       }
     });
- 
+
     sortPlayersBtn.addEventListener("click", () => {
       players.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
@@ -284,6 +284,9 @@
         deleteBtn.addEventListener("click", () => {
           if (confirm(`Vuoi davvero eliminare ${player.name}?`)) {
             players = players.filter((p) => p !== player);
+            delete tempScores[player.name];
+            delete usedPlus10[player.name];
+            updateConfirmButton();
             renderPlayers();
           }
         });
@@ -340,8 +343,6 @@
         // Disabilita il pulsante se il giocatore ha già usato +10 in questa mano
         if (usedPlus10[player.name]) {
           plus10Btn.disabled = true;
-          plus10Btn.style.opacity = "0.5";
-          plus10Btn.style.cursor = "not-allowed";
         }
         
         plus10Btn.addEventListener("click", () => {
@@ -354,11 +355,15 @@
         });
 
         buttonsDiv.appendChild(plus3Btn);
-        buttonsDiv.appendChild(plus10Btn);        playerDiv.appendChild(leftSection);
+        buttonsDiv.appendChild(plus10Btn);
+
+        playerDiv.appendChild(leftSection);
         playerDiv.appendChild(scoreSection);
-        playerDiv.appendChild(buttonsDiv);        playerList.appendChild(playerDiv);
+        playerDiv.appendChild(buttonsDiv);
+
+        playerList.appendChild(playerDiv);
       });
-      
+
       // Aggiorna la visibilità del pulsante conferma
       updateConfirmButton();
     }
