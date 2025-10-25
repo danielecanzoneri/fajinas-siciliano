@@ -27,9 +27,10 @@
       align-items: center;
       gap: 10px;
     }
-
+    
     #add-player,
-    #sort-players {
+    #sort-players,
+    #confirm-hand {
       padding: 12px 18px;
       background-color: #ff7043;
       border: none;
@@ -42,13 +43,27 @@
     }
 
     #add-player:hover,
-    #sort-players:hover {
+    #sort-players:hover,
+    #confirm-hand:hover {
       background-color: #e64a19;
+    }
+
+    #confirm-hand {
+      background-color: #4caf50;
+    }
+
+    #confirm-hand:hover {
+      background-color: #388e3c;
+    }
+
+    #confirm-hand:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
     }
 
     #player-list {
       max-width: 480px;
-      margin: 0 auto 40px;
+      margin: 0 auto;
       text-align: left;
     }
 
@@ -94,6 +109,12 @@
       font-size: 1.3em;
       min-width: 80px;
     }
+    .score-section {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
 
     .score {
       font-size: 1.3em;
@@ -108,6 +129,14 @@
 
     .score:hover {
       background-color: #ffd180;
+    }
+
+    .temp-score {
+      font-size: 1em;
+      color: #ff7043;
+      font-weight: bold;
+      min-width: 35px;
+      text-align: left;
     }
 
     .buttons {
@@ -130,6 +159,16 @@
     button.score-btn:hover {
       background-color: #e64a19;
       transform: scale(1.05);
+    }
+
+    button.score-btn:disabled {
+      background-color: #e64a19;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    button.score-btn:disabled:hover {
+      transform: none;
     }
 
     @media (max-width: 600px) {
@@ -159,20 +198,25 @@
 </head>
 <body>
   <h1>🃏 Fajinas Siciliano</h1>
-
   <div id="controls">
     <button id="add-player">➕ Aggiungi Giocatore</button>
     <button id="sort-players">🏆 Calcola Classifica</button>
   </div>
-
   <div id="player-list"></div>
+  
+  <div id="confirm-section" style="display: none; text-align: center; margin: 20px 0;">
+    <button id="confirm-hand" disabled>✅ Conferma punteggi</button>
+  </div>
 
   <script>
     const playerList = document.getElementById("player-list");
     const addPlayerBtn = document.getElementById("add-player");
     const sortPlayersBtn = document.getElementById("sort-players");
+    const confirmHandBtn = document.getElementById("confirm-hand");
 
     let players = [];
+    let tempScores = {}; // Punteggi temporanei per la mano corrente
+    let usedPlus10 = {}; // Traccia chi ha già usato +10 nella mano corrente
 
     addPlayerBtn.addEventListener("click", () => {
       const name = prompt("Nome del giocatore:");
@@ -194,6 +238,36 @@
       renderPlayers();
     });
 
+    confirmHandBtn.addEventListener("click", () => {
+      // Conferma i punteggi temporanei
+      players.forEach(player => {
+        if (tempScores[player.name]) {
+          player.score += tempScores[player.name];
+        }
+      });
+      
+      // Resetta i punteggi temporanei e l'uso del +10
+      tempScores = {};
+      usedPlus10 = {};
+      confirmHandBtn.disabled = true;
+      renderPlayers();
+    });
+    
+    function updateConfirmButton() {
+      const confirmSection = document.getElementById("confirm-section");
+
+      // Mostra la sezione solo se ci sono giocatori
+      if (players.length > 0) {
+        confirmSection.style.display = "block";
+
+        // Abilita il pulsante "Conferma" solo se ci sono punteggi temporanei
+        const hasTempScores = Object.values(tempScores).some(score => score > 0);
+        confirmHandBtn.disabled = !hasTempScores;
+      } else {
+        confirmSection.style.display = "none";
+      }
+    }
+
     function renderPlayers() {
       playerList.innerHTML = "";
       players.forEach((player) => {
@@ -210,6 +284,9 @@
         deleteBtn.addEventListener("click", () => {
           if (confirm(`Vuoi davvero eliminare ${player.name}?`)) {
             players = players.filter((p) => p !== player);
+            delete tempScores[player.name];
+            delete usedPlus10[player.name];
+            updateConfirmButton();
             renderPlayers();
           }
         });
@@ -220,6 +297,9 @@
 
         leftSection.appendChild(deleteBtn);
         leftSection.appendChild(playerName);
+        
+        const scoreSection = document.createElement("div");
+        scoreSection.className = "score-section";
 
         const score = document.createElement("span");
         score.className = "score";
@@ -237,34 +317,55 @@
           }
         });
 
+        const tempScore = document.createElement("div");
+        tempScore.className = "temp-score";
+        tempScore.textContent = tempScores[player.name] ? `+${tempScores[player.name]}` : "";
+
+        scoreSection.appendChild(tempScore);
+        scoreSection.appendChild(score);
+
         const buttonsDiv = document.createElement("div");
         buttonsDiv.className = "buttons";
-
+         
         const plus3Btn = document.createElement("button");
         plus3Btn.textContent = "+3";
         plus3Btn.className = "score-btn";
         plus3Btn.addEventListener("click", () => {
-          player.score += 3;
+          tempScores[player.name] = (tempScores[player.name] || 0) + 3;
+          updateConfirmButton();
           renderPlayers();
         });
-
+         
         const plus10Btn = document.createElement("button");
         plus10Btn.textContent = "+10";
         plus10Btn.className = "score-btn";
+        
+        // Disabilita il pulsante se il giocatore ha già usato +10 in questa mano
+        if (usedPlus10[player.name]) {
+          plus10Btn.disabled = true;
+        }
+        
         plus10Btn.addEventListener("click", () => {
-          player.score += 10;
-          renderPlayers();
+          if (!usedPlus10[player.name]) {
+            tempScores[player.name] = (tempScores[player.name] || 0) + 10;
+            usedPlus10[player.name] = true;
+            updateConfirmButton();
+            renderPlayers();
+          }
         });
 
         buttonsDiv.appendChild(plus3Btn);
         buttonsDiv.appendChild(plus10Btn);
 
         playerDiv.appendChild(leftSection);
-        playerDiv.appendChild(score);
+        playerDiv.appendChild(scoreSection);
         playerDiv.appendChild(buttonsDiv);
 
         playerList.appendChild(playerDiv);
       });
+
+      // Aggiorna la visibilità del pulsante conferma
+      updateConfirmButton();
     }
   </script>
 </body>
