@@ -26,10 +26,9 @@
       flex-direction: column;
       align-items: center;
       gap: 10px;
-    }
-
-    #add-player,
-    #sort-players {
+    }    #add-player,
+    #sort-players,
+    #confirm-hand {
       padding: 12px 18px;
       background-color: #ff7043;
       border: none;
@@ -42,8 +41,22 @@
     }
 
     #add-player:hover,
-    #sort-players:hover {
+    #sort-players:hover,
+    #confirm-hand:hover {
       background-color: #e64a19;
+    }
+
+    #confirm-hand {
+      background-color: #4caf50;
+    }
+
+    #confirm-hand:hover {
+      background-color: #388e3c;
+    }
+
+    #confirm-hand:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
     }
 
     #player-list {
@@ -94,6 +107,12 @@
       font-size: 1.3em;
       min-width: 80px;
     }
+      .score-section {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
 
     .score {
       font-size: 1.3em;
@@ -108,6 +127,14 @@
 
     .score:hover {
       background-color: #ffd180;
+    }
+
+    .temp-score {
+      font-size: 1em;
+      color: #ff7043;
+      font-weight: bold;
+      min-width: 35px;
+      text-align: left;
     }
 
     .buttons {
@@ -159,20 +186,24 @@
 </head>
 <body>
   <h1>🃏 Fajinas Siciliano</h1>
-
   <div id="controls">
     <button id="add-player">➕ Aggiungi Giocatore</button>
     <button id="sort-players">🏆 Calcola Classifica</button>
   </div>
-
   <div id="player-list"></div>
+  
+  <div id="confirm-section" style="display: none; text-align: center; margin: 20px 0;">
+    <button id="confirm-hand" disabled>✅ Conferma punteggi</button>
+  </div>
 
   <script>
     const playerList = document.getElementById("player-list");
     const addPlayerBtn = document.getElementById("add-player");
     const sortPlayersBtn = document.getElementById("sort-players");
+    const confirmHandBtn = document.getElementById("confirm-hand");
 
     let players = [];
+    let tempScores = {}; // Punteggi temporanei per la mano corrente
 
     addPlayerBtn.addEventListener("click", () => {
       const name = prompt("Nome del giocatore:");
@@ -185,7 +216,7 @@
         renderPlayers();
       }
     });
-
+ 
     sortPlayersBtn.addEventListener("click", () => {
       players.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
@@ -193,6 +224,35 @@
       });
       renderPlayers();
     });
+
+    confirmHandBtn.addEventListener("click", () => {
+      // Conferma i punteggi temporanei
+      players.forEach(player => {
+        if (tempScores[player.name]) {
+          player.score += tempScores[player.name];
+        }
+      });
+
+      // Resetta i punteggi temporanei
+      tempScores = {};
+      confirmHandBtn.disabled = true;
+      renderPlayers();
+    });
+    
+    function updateConfirmButton() {
+      const confirmSection = document.getElementById("confirm-section");
+
+      // Mostra la sezione solo se ci sono giocatori
+      if (players.length > 0) {
+        confirmSection.style.display = "block";
+
+        // Abilita il pulsante "Conferma" solo se ci sono punteggi temporanei
+        const hasTempScores = Object.values(tempScores).some(score => score > 0);
+        confirmHandBtn.disabled = !hasTempScores;
+      } else {
+        confirmSection.style.display = "none";
+      }
+    }
 
     function renderPlayers() {
       playerList.innerHTML = "";
@@ -220,6 +280,9 @@
 
         leftSection.appendChild(deleteBtn);
         leftSection.appendChild(playerName);
+        
+        const scoreSection = document.createElement("div");
+        scoreSection.className = "score-section";
 
         const score = document.createElement("span");
         score.className = "score";
@@ -237,14 +300,22 @@
           }
         });
 
+        const tempScore = document.createElement("div");
+        tempScore.className = "temp-score";
+        tempScore.textContent = tempScores[player.name] ? `+${tempScores[player.name]}` : "";
+
+        scoreSection.appendChild(tempScore);
+        scoreSection.appendChild(score);
+
         const buttonsDiv = document.createElement("div");
         buttonsDiv.className = "buttons";
-
+         
         const plus3Btn = document.createElement("button");
         plus3Btn.textContent = "+3";
         plus3Btn.className = "score-btn";
         plus3Btn.addEventListener("click", () => {
-          player.score += 3;
+          tempScores[player.name] = (tempScores[player.name] || 0) + 3;
+          updateConfirmButton();
           renderPlayers();
         });
 
@@ -252,19 +323,19 @@
         plus10Btn.textContent = "+10";
         plus10Btn.className = "score-btn";
         plus10Btn.addEventListener("click", () => {
-          player.score += 10;
+          tempScores[player.name] = (tempScores[player.name] || 0) + 10;
+          updateConfirmButton();
           renderPlayers();
         });
 
         buttonsDiv.appendChild(plus3Btn);
-        buttonsDiv.appendChild(plus10Btn);
-
-        playerDiv.appendChild(leftSection);
-        playerDiv.appendChild(score);
-        playerDiv.appendChild(buttonsDiv);
-
-        playerList.appendChild(playerDiv);
+        buttonsDiv.appendChild(plus10Btn);        playerDiv.appendChild(leftSection);
+        playerDiv.appendChild(scoreSection);
+        playerDiv.appendChild(buttonsDiv);        playerList.appendChild(playerDiv);
       });
+      
+      // Aggiorna la visibilità del pulsante conferma
+      updateConfirmButton();
     }
   </script>
 </body>
