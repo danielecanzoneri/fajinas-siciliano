@@ -27,9 +27,8 @@
       align-items: center;
       gap: 10px;
     }
-    
+
     #add-player,
-    #sort-players,
     #confirm-hand {
       padding: 12px 18px;
       background-color: #ff7043;
@@ -43,7 +42,6 @@
     }
 
     #add-player:hover,
-    #sort-players:hover,
     #confirm-hand:hover {
       background-color: #e64a19;
     }
@@ -168,7 +166,6 @@
       }
 
       #add-player,
-      #sort-players,
       #confirm-hand {
         width: 90%;
       }
@@ -192,7 +189,6 @@
   <h1>🃏 Fajinas Siciliano</h1>
   <div id="controls">
     <button id="add-player">➕ Aggiungi Giocatore</button>
-    <button id="sort-players">🏆 Calcola Classifica</button>
   </div>
   <div id="player-list"></div>
   
@@ -203,7 +199,6 @@
   <script>
     const playerList = document.getElementById("player-list");
     const addPlayerBtn = document.getElementById("add-player");
-    const sortPlayersBtn = document.getElementById("sort-players");
     const confirmHandBtn = document.getElementById("confirm-hand");
 
     let players = [];
@@ -222,14 +217,13 @@
       }
     });
 
-    sortPlayersBtn.addEventListener("click", () => {
+    function sortPlayers() {
       players.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         return a.name.localeCompare(b.name, "it", { sensitivity: "base" });
       });
-      renderPlayers();
-    });
-
+    }
+    
     confirmHandBtn.addEventListener("click", () => {
       // Conferma i punteggi temporanei
       players.forEach(player => {
@@ -237,6 +231,9 @@
           player.score += tempScores[player.name];
         }
       });
+      
+      // Ordina automaticamente i giocatori dopo aver confermato i punteggi
+      sortPlayers();
       
       // Resetta i punteggi temporanei e l'uso del +10
       tempScores = {};
